@@ -56,14 +56,9 @@ Bot 自体は元から複数サーバー（ギルド）に同時参加できま�
 
 ### HoYoLAB 自動デイリーチェックイン
 
-毎日 6:00（Asia/Tokyo）に、`cookie.json` に登録した全アカウントで Genshin Impact / Honkai: Star Rail のデイリーチェックインを自動実行し、結果を `HOYOLAB_NOTIFY_CHANNEL_ID` で指定したチャンネルに Embed で投稿します。
+毎日 6:00（Asia/Tokyo）に、`cookie.json` のアカウントで Genshin Impact / Honkai: Star Rail のデイリーチェックインを自動実行し、結果を `HOYOLAB_NOTIFY_CHANNEL_ID` で指定したチャンネルに Embed で投稿します。
 
-- `cookie.json` をプロジェクトルート（`package.json` と同じ階層）に用意してください（`.gitignore` 済みでリポジトリには含まれません）。中身は以下の形式の配列です。
-  ```json
-  [
-    { "friendlyName": "メイン垢", "cookie": "ltoken_v2=...; ltuid_v2=...; ..." }
-  ]
-  ```
+- `cookie.json` をプロジェクトルート（`package.json` と同じ階層）に用意してください（`.gitignore` 済みでリポジトリには含まれません）。ブラウザの Cookie エクスポート（`{ name, value, domain, ... }` の配列）形式で、hoyolab.com にログイン済みの 1 アカウント分の Cookie を想定しています。
 - `cookie.json` が存在しない場合は、その日のチェックインはスキップされコンソールにエラーが出力されます（Bot 自体は落ちません）。
 - `HOYOLAB_NOTIFY_CHANNEL_ID` が未設定、またはチャンネルが見つからない場合でも、チェックイン処理自体は実行されます（結果の Embed 通知だけがスキップされ、代わりにコンソールへログ出力されます）。
 - Bot プロセスが起動している間、Node.js 内部のスケジューラ（`node-cron`）でスケジュール実行されます。OS の cron 設定は不要です。

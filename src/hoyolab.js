@@ -8,15 +8,17 @@ const { EMBED_COLOR } = require('./utils/constants');
 const COOKIE_PATH = path.join(__dirname, '..', 'cookie.json');
 const CRON_SCHEDULE = '0 0 6 * * *';
 const CRON_TIMEZONE = 'Asia/Tokyo';
+const DEFAULT_FRIENDLY_NAME = 'HoYoLAB';
 
 const CHECKIN_GAMES = [
   { key: Games.GENSHIN_IMPACT, label: 'Genshin Impact' },
   { key: Games.HONKAI_STAR_RAIL, label: 'Honkai: Star Rail' },
 ];
 
-function loadAccounts() {
+function loadCookieString() {
   const raw = fs.readFileSync(COOKIE_PATH, 'utf-8');
-  return JSON.parse(raw);
+  const cookies = JSON.parse(raw);
+  return cookies.map((c) => `${c.name}=${c.value}`).join('; ');
 }
 
 function formatGameResult({ result, error }) {
@@ -39,22 +41,6 @@ function buildResultEmbed(friendlyName, gameResults) {
   return embed;
 }
 
-async function checkInAccount(account) {
-  const client = new HoyoLabClient({ cookie: account.cookie });
-  const gameResults = [];
-
-  for (const game of CHECKIN_GAMES) {
-    try {
-      const result = await client.dailyCheckIn(game.key);
-      gameResults.push({ label: game.label, result });
-    } catch (error) {
-      gameResults.push({ label: game.label, error });
-    }
-  }
-
-  return gameResults;
-}
-
 async function resolveNotifyChannel(client) {
   const notifyChannelId = process.env.HOYOLAB_NOTIFY_CHANNEL_ID;
   if (!notifyChannelId) {
@@ -69,30 +55,45 @@ async function resolveNotifyChannel(client) {
   return channel;
 }
 
-async function runDailyCheckIn(client) {
-  let accounts;
+async function resolveFriendlyName(hoyoClient) {
   try {
-    accounts = loadAccounts();
+    const accounts = await hoyoClient.getAccounts();
+    return accounts[0]?.nickname || DEFAULT_FRIENDLY_NAME;
+  } catch (error) {
+    console.error('HoYoLAB アカウント情報の取得に失敗しました:', error);
+    return DEFAULT_FRIENDLY_NAME;
+  }
+}
+
+async function runDailyCheckIn(client) {
+  let cookie;
+  try {
+    cookie = loadCookieString();
   } catch (error) {
     console.error('cookie.json の読み込みに失敗しました:', error);
     return;
   }
 
   const channel = await resolveNotifyChannel(client);
+  const hoyoClient = new HoyoLabClient({ cookie });
+  const friendlyName = await resolveFriendlyName(hoyoClient);
 
-  for (const account of accounts) {
+  const gameResults = [];
+  for (const game of CHECKIN_GAMES) {
     try {
-      const gameResults = await checkInAccount(account);
-      console.log(`HoYoLAB チェックイン完了 (${account.friendlyName}):`, gameResults);
-      if (channel) {
-        await channel.send({ embeds: [buildResultEmbed(account.friendlyName, gameResults)] });
-      }
+      const result = await hoyoClient.dailyCheckIn(game.key);
+      gameResults.push({ label: game.label, result });
     } catch (error) {
-      console.error(`HoYoLAB チェックインに失敗しました (${account.friendlyName}):`, error);
-      if (channel) {
-        await channel.send(`❌ ${account.friendlyName} のチェックインに失敗しました：${error.message}`).catch(() => {});
-      }
+      gameResults.push({ label: game.label, error });
     }
+  }
+
+  console.log(`HoYoLAB チェックイン完了 (${friendlyName}):`, gameResults);
+
+  if (channel) {
+    await channel.send({ embeds: [buildResultEmbed(friendlyName, gameResults)] }).catch((error) => {
+      console.error('HoYoLAB 結果の通知送信に失敗しました:', error);
+    });
   }
 }
 
