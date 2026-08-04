@@ -26,6 +26,23 @@ const data = new SlashCommandBuilder()
   );
 
 const REPORTABLE_CHANNEL_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
+const THREAD_CREATE_RETRIES = 3;
+const THREAD_CREATE_RETRY_DELAY_MS = 1500;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function startThreadWithRetry(message, options) {
+  for (let attempt = 1; attempt <= THREAD_CREATE_RETRIES; attempt += 1) {
+    try {
+      return await message.startThread(options);
+    } catch (error) {
+      const isLastAttempt = attempt === THREAD_CREATE_RETRIES;
+      if (error.code !== 50001 || isLastAttempt) throw error;
+      console.warn(`スレッド作成が失敗したためリトライします (${attempt}/${THREAD_CREATE_RETRIES}):`, error.message);
+      await sleep(THREAD_CREATE_RETRY_DELAY_MS);
+    }
+  }
+}
 
 async function execute(interaction) {
   const group = interaction.options.getSubcommandGroup();
@@ -62,7 +79,7 @@ async function handleReportMake(interaction) {
   await interaction.reply({ embeds: [embed] });
   const message = await interaction.fetchReply();
 
-  const thread = await message.startThread({
+  const thread = await startThreadWithRetry(message, {
     name: reportName,
     autoArchiveDuration: 1440,
   });
