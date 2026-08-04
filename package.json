@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "deploy": "node src/deploy-commands.js"
+    "deploy": "node src/deploy-commands.js",
+    "undeploy": "node src/undeploy-commands.js",
+    "invite": "node src/generate-invite.js"
   },
   "keywords": [],
   "author": "",
