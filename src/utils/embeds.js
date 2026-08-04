@@ -3,17 +3,26 @@ const { EMBED_COLOR } = require('./constants');
 
 const STATUS_UNRESOLVED = '⚠️未解決';
 const STATUS_RESOLVED = '✅解決済み';
-const NO_ANSWERER = '-';
 
-function buildReportEmbed({ reportName, status, creatorTag, resolverTag }) {
-  return new EmbedBuilder()
+function buildReportEmbed({
+  reportName,
+  status,
+  creatorTag,
+  creatorIconURL,
+  resolverTag,
+  resolverIconURL,
+}) {
+  const embed = new EmbedBuilder()
     .setColor(EMBED_COLOR)
     .setTitle(`レポート：${reportName}`)
-    .addFields(
-      { name: 'ステータス', value: status, inline: true },
-      { name: '作成者', value: creatorTag, inline: true },
-      { name: '回答者', value: resolverTag || NO_ANSWERER, inline: true },
-    );
+    .addFields({ name: 'ステータス', value: status, inline: true })
+    .setFooter({ text: `作成者：${creatorTag}`, iconURL: creatorIconURL });
+
+  if (resolverTag) {
+    embed.setAuthor({ name: `回答者：${resolverTag}`, iconURL: resolverIconURL });
+  }
+
+  return embed;
 }
 
 function buildResolvePromptEmbed(senderTag) {

@@ -1,4 +1,10 @@
-const { SlashCommandBuilder, ChannelType } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  ChannelType,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require('discord.js');
 const store = require('../store');
 const { buildReportEmbed, STATUS_UNRESOLVED } = require('../utils/embeds');
 
@@ -49,6 +55,7 @@ async function handleReportMake(interaction) {
     reportName,
     status: STATUS_UNRESOLVED,
     creatorTag,
+    creatorIconURL: interaction.user.displayAvatarURL(),
     resolverTag: null,
   });
 
@@ -59,6 +66,11 @@ async function handleReportMake(interaction) {
     name: reportName,
     autoArchiveDuration: 1440,
   });
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setLabel('スレッドを表示').setURL(thread.url).setStyle(ButtonStyle.Link),
+  );
+  await interaction.editReply({ components: [row] });
 
   store.createReport(thread.id, {
     channelId: channel.id,

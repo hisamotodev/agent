@@ -36,6 +36,8 @@ module.exports = async function handleButtonInteraction(interaction) {
     await interaction.message.edit({ components: [buildResolveButtonRow(authorId, true)] });
   }
 
+  const creator = await interaction.client.users.fetch(report.creatorId);
+
   const channel = await interaction.client.channels.fetch(report.channelId);
   const originalMessage = await channel.messages.fetch(report.messageId);
   await originalMessage.edit({
@@ -44,7 +46,9 @@ module.exports = async function handleButtonInteraction(interaction) {
         reportName: report.reportName,
         status: STATUS_RESOLVED,
         creatorTag: report.creatorTag,
+        creatorIconURL: creator.displayAvatarURL(),
         resolverTag,
+        resolverIconURL: answerer.displayAvatarURL(),
       }),
     ],
   });
