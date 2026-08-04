@@ -14,8 +14,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@chiraitori/hoyolab-core": "^1.1.0",
     "better-sqlite3": "^13.0.2",
     "discord.js": "^14.27.0",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "node-cron": "^4.6.0"
   }
 }

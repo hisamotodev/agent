@@ -2,6 +2,7 @@ require('dotenv').config({ quiet: true });
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const handleInteractionCreate = require('./handlers/interactionCreate');
 const handleMessageCreate = require('./handlers/messageCreate');
+const { scheduleHoyolabCheckIn } = require('./hoyolab');
 
 const client = new Client({
   intents: [
@@ -13,6 +14,7 @@ const client = new Client({
 
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag} (${client.guilds.cache.size} guild(s))`);
+  scheduleHoyolabCheckIn(client);
 });
 
 client.on('guildCreate', (guild) => {

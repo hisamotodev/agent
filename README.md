@@ -13,6 +13,7 @@
    DISCORD_TOKEN=（Bot のトークン）
    CLIENT_ID=（アプリケーションの Client ID）
    GUILD_ID=（開発用サーバーの ID。任意）
+   HOYOLAB_NOTIFY_CHANNEL_ID=（HoYoLAB チェックイン結果を投稿するチャンネルの ID。任意）
    ```
 3. スラッシュコマンドを登録
    ```
@@ -52,3 +53,17 @@ Bot 自体は元から複数サーバー（ギルド）に同時参加できま�
 
 - スレッド内でメッセージが送信されると、送信者の回答で解決したかを確認する Embed とボタンが送信されます。
 - ボタンが押されると、解決済みとしてマークした旨の Embed が送信され、レポート Embed のステータスと回答者が更新されます。
+
+### HoYoLAB 自動デイリーチェックイン
+
+毎日 6:00（Asia/Tokyo）に、`cookie.json` に登録した全アカウントで Genshin Impact / Honkai: Star Rail のデイリーチェックインを自動実行し、結果を `HOYOLAB_NOTIFY_CHANNEL_ID` で指定したチャンネルに Embed で投稿します。
+
+- `cookie.json` をプロジェクトルート（`package.json` と同じ階層）に用意してください（`.gitignore` 済みでリポジトリには含まれません）。中身は以下の形式の配列です。
+  ```json
+  [
+    { "friendlyName": "メイン垢", "cookie": "ltoken_v2=...; ltuid_v2=...; ..." }
+  ]
+  ```
+- `cookie.json` が存在しない場合は、その日のチェックインはスキップされコンソールにエラーが出力されます（Bot 自体は落ちません）。
+- `HOYOLAB_NOTIFY_CHANNEL_ID` が未設定、またはチャンネルが見つからない場合でも、チェックイン処理自体は実行されます（結果の Embed 通知だけがスキップされ、代わりにコンソールへログ出力されます）。
+- Bot プロセスが起動している間、Node.js 内部のスケジューラ（`node-cron`）でスケジュール実行されます。OS の cron 設定は不要です。
